@@ -1,0 +1,75 @@
+{
+  "name": "rsbuild-plugin-vue-mcp",
+  "version": "0.1.0",
+  "description": "Rsbuild/Rspack MCP plugin based on Vue DevTools",
+  "author": "BrightXu",
+  "license": "MIT",
+  "keywords": [
+    "rsbulid-plugin",
+    "rspack-plugin",
+    "vue",
+    "mcp",
+    "modelcontextprotocol"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./rspack": {
+      "types": "./dist/types/rspack.d.ts",
+      "import": "./dist/rspack.js",
+      "default": "./dist/rspack.js",
+      "require": "./dist/rspack.cjs"
+    },
+    "./types": {
+      "types": "./dist/types/types.d.ts"
+    },
+    "./*": "./*"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/types/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rslib build",
+    "dev": "rslib build --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.24.0",
+    "@vue/devtools-kit": "^8.1.0",
+    "birpc": "^2.6.0",
+    "hookable": "^5.5.3",
+    "nanoid": "^3.3.0",
+    "ws": "^8.18.0",
+    "zod": "^4.0"
+  },
+  "devDependencies": {
+    "@rsbuild/core": "^2.1.0",
+    "@rslib/core": "^0.23.0",
+    "@types/node": "^22.19.17",
+    "@types/ws": "^8.18.0",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "@rsbuild/core": "^1.2.9 || >=2.0.0",
+    "@rspack/core": "^1.3.0 || >=2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@rsbuild/core": {
+      "optional": true
+    },
+    "@rspack/core": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
