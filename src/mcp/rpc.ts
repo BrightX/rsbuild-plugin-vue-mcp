@@ -2,6 +2,12 @@ import type { RpcFunctions, VueMcpContext } from "../types.ts";
 
 export function createServerRpcFunc(ctx: VueMcpContext): RpcFunctions {
   return {
+    // appRecord
+    getAppRecordStatus: (_: { event: string }) => ({}),
+    onAppRecordStatusUpdate: (event: string, data: string) => {
+      ctx.hooks.callHook(event, data).finally()
+    },
+    toggleApp: (_: { id: string }) => ({}),
     // component tree
     getInspectorTree: (_: { event: string, componentName?: string }) => ({}),
     onInspectorTreeUpdated: (event: string, data: string) => {

@@ -19,9 +19,59 @@ export function createMcpServerDefault<DEV extends RsbuildPluginAPI | RspackComp
   })
 
   server.registerTool(
+    'get-app-record-status',
+    {
+      title: 'App Record Status',
+      description: 'Get the App status of Devtools on the page. This should be the first tool called before using any other MCP tools, to determine the current App status, including appRecords and activeAppRecord.',
+    },
+    async () => {
+      return new Promise((resolve, reject) => {
+        const eventName = nanoid()
+        ctx.hooks.hookOnce(eventName, (res) => {
+          resolve({
+            content: [{
+              type: 'text',
+              text: stringify(res),
+            }],
+          })
+        })
+        ctx.rpcServer.getAppRecordStatus({ event: eventName })
+          .catch(e => {
+            console.error(e);
+            reject(e)
+          })
+      })
+    }
+  );
+
+  server.registerTool(
+    'toggle-app',
+    {
+      title: 'Toggle App',
+      description: 'Toggle the activeAppRecord by the id of the appRecord. All MCP tool operations on Components, Router, Pinia, etc. are performed based on the activeAppRecord.',
+      inputSchema: { id: z.string() },
+    },
+    async ({ id }) => {
+      return new Promise((resolve, reject) => {
+        ctx.rpcServer.toggleApp({ id }).then(() => {
+          resolve({
+            content: [{
+              type: 'text',
+              text: 'ok',
+            }],
+          })
+        }).catch(e => {
+          console.error(e);
+          reject(e)
+        })
+      })
+    }
+  )
+
+  server.registerTool(
     'get-component-tree',
     {
-      description: 'Get the Vue component tree in markdown tree syntax format.',
+      description: 'Get the Vue component tree in JSON tree syntax format (by Vue DevTools stringify, a two-dimensional serialization format that separates structure from values, replacing nested object references with IDs.).',
     },
     async () => {
       return new Promise((resolve, reject) => {

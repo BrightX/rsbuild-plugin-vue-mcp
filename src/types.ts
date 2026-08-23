@@ -6,6 +6,10 @@ import type { BirpcGroupReturn } from "birpc";
 export type Awaitable<T> = T | Promise<T>;
 
 export interface RpcFunctions {
+  // appRecord
+  getAppRecordStatus: (options: { event: string }) => void
+  onAppRecordStatusUpdate: (event: string, data: string) => void
+  toggleApp: (options: { id: string }) => void
   // components
   getInspectorTree: (options: { event: string, componentName?: string }) => void
   onInspectorTreeUpdated: (event: string, data: string) => void

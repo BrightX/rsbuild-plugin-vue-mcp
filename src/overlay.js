@@ -64,6 +64,25 @@ setTimeout(() => {
   const rpc = createRPCClient(
     ws,
     {
+      // appRecord
+      async getAppRecordStatus({ event }) {
+        const mapRecord = record => {
+          return {
+            id: record.id,
+            name: record.name,
+            version: record.version,
+          }
+        };
+        const appStatus = {
+          appRecords: devtools.ctx.state.appRecords.map(mapRecord),
+          activeAppRecord: mapRecord(devtools.ctx.state.activeAppRecord),
+          activeAppRecordId: devtools.ctx.state.activeAppRecordId,
+        };
+        rpc.onAppRecordStatusUpdate(event, JSON.stringify(appStatus));
+      },
+      async toggleApp({ id }) {
+        devtools.ctx.api.toggleApp(id)
+      },
       // get component tree
       async getInspectorTree(query) {
         const inspectorTree = await devtools.api.getInspectorTree({
@@ -106,10 +125,9 @@ setTimeout(() => {
             remove: false,
             value: query.value,
           },
-          // set(object, path, value, cb) {},
+          set(object, path, value, cb) {},
         }
-        // await devtools.ctx.api.editInspectorState(payload)
-        await devtools.ctx.api.editComponentState(payload)
+        await devtools.ctx.api.editInspectorState(payload)
       },
 
       // highlight component
