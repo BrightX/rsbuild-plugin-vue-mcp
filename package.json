@@ -1,6 +1,6 @@
 {
   "name": "rsbuild-plugin-vue-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Rsbuild/Rspack MCP plugin based on Vue DevTools",
   "author": "BrightXu",
   "license": "MIT",
@@ -11,7 +11,7 @@
   },
   "bugs": "https://github.com/BrightX/rsbuild-plugin-vue-mcp/issues",
   "keywords": [
-    "rsbulid-plugin",
+    "rsbuild-plugin",
     "rspack-plugin",
     "vue",
     "mcp",
