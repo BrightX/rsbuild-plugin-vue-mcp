@@ -46,7 +46,7 @@ export const pluginVueMcp = (options: PluginVueMcpOptions<RsbuildPluginAPI> = {}
         targets: ['web'],
         order: 'pre',
       }, (context) => {
-        if (api.context.action !== 'dev' || firstInjected) return context;
+        if ((api.context.action && api.context.action !== 'dev') || firstInjected) return context;
         let code = context.code;
         if (typeof code !== 'string') return context;
         firstInjected = true;

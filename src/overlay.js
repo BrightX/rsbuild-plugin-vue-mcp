@@ -55,9 +55,9 @@ function flattenChildren(node) {
   return result
 }
 
-setTimeout(() => {
-  devtools.init()
+devtools.init()
 
+setTimeout(() => {
   const ws = new WebSocket(`${proto}://${host}${base}`);
 
   let highlightComponentTimeout = null
