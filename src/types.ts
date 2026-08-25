@@ -1,35 +1,26 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import type { Implementation as McpServerInfo } from '@modelcontextprotocol/sdk/types.js'
-import type { Hookable } from "hookable";
 import type { BirpcGroupReturn } from "birpc";
 
 export type Awaitable<T> = T | Promise<T>;
 
 export interface RpcFunctions {
   // appRecord
-  getAppRecordStatus: (options: { event: string }) => void
-  onAppRecordStatusUpdate: (event: string, data: string) => void
+  getAppRecordStatus: () => string
   toggleApp: (options: { id: string }) => void
   // components
-  getInspectorTree: (options: { event: string, componentName?: string }) => void
-  onInspectorTreeUpdated: (event: string, data: string) => void
-  getInspectorState: (options: { event: string, componentName: string }) => void
-  onInspectorStateUpdated: (event: string, data: string) => void
+  getInspectorTree: (options: { componentName?: string }) => string
+  getInspectorState: (options: { componentName: string }) => string
   editComponentState: (options: { componentName: string, path: string[], value: string, valueType: string }) => void
   highlightComponent: (options: { componentName: string }) => void
   // router
-  getRouterInfo: (options: { event: string }) => void
-  onRouterInfoUpdated: (event: string, data: string) => void
+  getRouterInfo: () => string
   // pinia
-  getPiniaState: (options: { event: string, storeName: string }) => void
-  onPiniaInfoUpdated: (event: string, data: string) => void
-  getPiniaTree: (options: { event: string }) => void
-  onPiniaTreeUpdated: (event: string, data: string) => void
+  getPiniaTree: () => string
+  getPiniaState: (options: { storeName: string }) => string
 }
 
 export interface VueMcpContext {
-  hooks: Hookable
-  rpc: RpcFunctions
   rpcServer: BirpcGroupReturn<RpcFunctions>
 }
 

@@ -6,7 +6,6 @@ import type { Compiler, DevServerMiddleware, RspackPluginInstance } from "@rspac
 import { WebSocketServer } from "ws";
 import type { PluginVueMcpOptions, RpcFunctions } from "./types.ts";
 import { createVueMcpContext } from "./mcp/context.ts";
-import { createServerRpcFunc } from "./mcp/rpc.ts";
 import { createRPCServer } from "./core/dev-rpc.ts";
 import { createMcpServerDefault } from "./mcp/server.ts";
 import { setupRspackRoutes } from "./mcp/connect.ts";
@@ -104,10 +103,7 @@ export class VueMcpPlugin implements RspackPluginInstance {
           })
         })
 
-        const rpc = createServerRpcFunc(ctx);
-
-        ctx.rpcServer = createRPCServer<RpcFunctions, any>(wss, rpc, { timeout: 3_000, })
-        ctx.rpc = rpc
+        ctx.rpcServer = createRPCServer<RpcFunctions, any>(wss, {}, { timeout: 3_000, })
 
         const { printUrl = true, mcpPath = '/__mcp' } = this.options;
 

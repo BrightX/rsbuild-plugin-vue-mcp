@@ -3,7 +3,6 @@ import { version } from '../../package.json'
 import type { PluginVueMcpOptions, VueMcpContext } from "../types.ts";
 import type { RsbuildPluginAPI } from "@rsbuild/core";
 import type { Compiler as RspackCompiler } from "@rspack/core";
-import { nanoid } from "nanoid";
 import { z } from "zod";
 
 function stringify(value: any) {
@@ -22,25 +21,19 @@ export function createMcpServerDefault<DEV extends RsbuildPluginAPI | RspackComp
     'get-app-record-status',
     {
       title: 'App Record Status',
-      description: 'Get the App status of Devtools on the page. This should be the first tool called before using any other MCP tools, to determine the current App status, including appRecords and activeAppRecord.',
+      description: 'Get the current Devtools App status (appRecords and activeAppRecord). Must be called first before any other MCP tools. ' +
+        'An empty content response usually means the user needs to open a web page with an app to debug. ' +
+        'If multiple content items are returned, the user has multiple app pages open and should close all but one to avoid interference. ' +
+        'If a content contains multiple appRecords, it means multiple Vue App instances exist on the page. `toggle-app` to switch activeAppRecord. ',
     },
     async () => {
-      return new Promise((resolve, reject) => {
-        const eventName = nanoid()
-        ctx.hooks.hookOnce(eventName, (res) => {
-          resolve({
-            content: [{
-              type: 'text',
-              text: stringify(res),
-            }],
-          })
-        })
-        ctx.rpcServer.getAppRecordStatus({ event: eventName })
-          .catch(e => {
-            console.error(e);
-            reject(e)
-          })
-      })
+      const res = await ctx.rpcServer.getAppRecordStatus();
+      return {
+        content: res.map(r => ({
+          type: 'text',
+          text: stringify(r),
+        }))
+      }
     }
   );
 
@@ -52,19 +45,13 @@ export function createMcpServerDefault<DEV extends RsbuildPluginAPI | RspackComp
       inputSchema: { id: z.string() },
     },
     async ({ id }) => {
-      return new Promise((resolve, reject) => {
-        ctx.rpcServer.toggleApp({ id }).then(() => {
-          resolve({
-            content: [{
-              type: 'text',
-              text: 'ok',
-            }],
-          })
-        }).catch(e => {
-          console.error(e);
-          reject(e)
-        })
-      })
+      await ctx.rpcServer.toggleApp({ id });
+      return {
+        content: [{
+          type: 'text',
+          text: 'ok',
+        }],
+      }
     }
   )
 
@@ -72,24 +59,16 @@ export function createMcpServerDefault<DEV extends RsbuildPluginAPI | RspackComp
     'get-component-tree',
     {
       description: 'Get the Vue component tree in JSON tree syntax format (by Vue DevTools stringify, a two-dimensional serialization format that separates structure from values, replacing nested object references with IDs.).',
+      inputSchema: { componentName: z.string().optional().describe('query by componentName (the component\'s name, not uid), default query all components') },
     },
-    async () => {
-      return new Promise((resolve, reject) => {
-        const eventName = nanoid()
-        ctx.hooks.hookOnce(eventName, (res) => {
-          resolve({
-            content: [{
-              type: 'text',
-              text: stringify(res),
-            }],
-          })
-        })
-        ctx.rpcServer.getInspectorTree({ event: eventName })
-          .catch(e => {
-            console.error(e);
-            reject(e)
-          })
-      })
+    async ({ componentName }) => {
+      const res = await ctx.rpcServer.getInspectorTree({ componentName });
+      return {
+        content: res.map(r => ({
+          type: 'text',
+          text: stringify(r),
+        }))
+      }
     },
   );
 
@@ -97,25 +76,16 @@ export function createMcpServerDefault<DEV extends RsbuildPluginAPI | RspackComp
     'get-component-state',
     {
       description: 'Get the Vue component state in JSON structure format.',
-      inputSchema: { componentName: z.string(), }
+      inputSchema: { componentName: z.string().describe('query by componentName (the component\'s name, not uid)'), }
     },
     async ({ componentName }) => {
-      return new Promise((resolve, reject) => {
-        const eventName = nanoid()
-        ctx.hooks.hookOnce(eventName, (res) => {
-          resolve({
-            content: [{
-              type: 'text',
-              text: stringify(res),
-            }],
-          })
-        })
-        ctx.rpcServer.getInspectorState({ event: eventName, componentName })
-          .catch(e => {
-            console.error(e);
-            reject(e)
-          })
-      })
+      const res = await ctx.rpcServer.getInspectorState({ componentName });
+      return {
+        content: res.map(r => ({
+          type: 'text',
+          text: stringify(r),
+        }))
+      }
     },
   )
 
@@ -124,26 +94,20 @@ export function createMcpServerDefault<DEV extends RsbuildPluginAPI | RspackComp
     {
       description: 'Edit the Vue component state.',
       inputSchema: {
-        componentName: z.string(),
+        componentName: z.string().describe('by componentName (the component\'s name, not uid)'),
         path: z.array(z.string()),
         value: z.string(),
         valueType: z.enum(['string', 'number', 'boolean', 'object', 'array']),
       }
     },
     async ({ componentName, path, value, valueType }) => {
-      return new Promise((resolve, reject) => {
-        ctx.rpcServer.editComponentState({ componentName, path, value, valueType }).then(() => {
-          resolve({
-            content: [{
-              type: 'text',
-              text: 'ok',
-            }],
-          })
-        }).catch(e => {
-          console.error(e);
-          reject(e)
-        })
-      })
+      await ctx.rpcServer.editComponentState({ componentName, path, value, valueType });
+      return {
+        content: [{
+          type: 'text',
+          text: 'ok',
+        }],
+      }
     },
   )
 
@@ -153,23 +117,17 @@ export function createMcpServerDefault<DEV extends RsbuildPluginAPI | RspackComp
       description: 'Highlight the Vue component.',
       inputSchema:
         {
-          componentName: z.string(),
+          componentName: z.string().describe('by componentName (the component\'s name, not uid)'),
         },
     },
     async ({ componentName }) => {
-      return new Promise((resolve, reject) => {
-        ctx.rpcServer.highlightComponent({ componentName }).then(() => {
-          resolve({
-            content: [{
-              type: 'text',
-              text: 'ok',
-            }],
-          })
-        }).catch(e => {
-          console.error(e);
-          reject(e)
-        })
-      })
+      await ctx.rpcServer.highlightComponent({ componentName });
+      return {
+        content: [{
+          type: 'text',
+          text: 'ok',
+        }],
+      }
     },
   )
 
@@ -179,22 +137,13 @@ export function createMcpServerDefault<DEV extends RsbuildPluginAPI | RspackComp
       description: 'Get the Vue router info in JSON structure format.',
     },
     async () => {
-      return new Promise((resolve, reject) => {
-        const eventName = nanoid()
-        ctx.hooks.hookOnce(eventName, (res) => {
-          resolve({
-            content: [{
-              type: 'text',
-              text: stringify(res),
-            }],
-          })
-        })
-        ctx.rpcServer.getRouterInfo({ event: eventName })
-          .catch(e => {
-            console.error(e);
-            reject(e)
-          })
-      })
+      const res = await ctx.rpcServer.getRouterInfo();
+      return {
+        content: res.map(r => ({
+          type: 'text',
+          text: stringify(r),
+        }))
+      }
     },
   )
 
@@ -207,22 +156,13 @@ export function createMcpServerDefault<DEV extends RsbuildPluginAPI | RspackComp
       }
     },
     async ({ storeName }) => {
-      return new Promise((resolve, reject) => {
-        const eventName = nanoid()
-        ctx.hooks.hookOnce(eventName, (res) => {
-          resolve({
-            content: [{
-              type: 'text',
-              text: stringify(res),
-            }],
-          })
-        })
-        ctx.rpcServer.getPiniaState({ event: eventName, storeName })
-          .catch(e => {
-            console.error(e);
-            reject(e)
-          })
-      })
+      const res = await ctx.rpcServer.getPiniaState({ storeName });
+      return {
+        content: res.map(r => ({
+          type: 'text',
+          text: stringify(r),
+        }))
+      }
     },
   )
 
@@ -232,22 +172,13 @@ export function createMcpServerDefault<DEV extends RsbuildPluginAPI | RspackComp
       description: 'Get the Pinia tree in JSON structure format.',
     },
     async () => {
-      return new Promise((resolve, reject) => {
-        const eventName = nanoid()
-        ctx.hooks.hookOnce(eventName, (res) => {
-          resolve({
-            content: [{
-              type: 'text',
-              text: stringify(res),
-            }],
-          })
-        })
-        ctx.rpcServer.getPiniaTree({ event: eventName })
-          .catch(e => {
-            console.error(e);
-            reject(e)
-          })
-      })
+      const res = await ctx.rpcServer.getPiniaTree();
+      return {
+        content: res.map(r => ({
+          type: 'text',
+          text: stringify(r),
+        }))
+      }
     },
   )
 

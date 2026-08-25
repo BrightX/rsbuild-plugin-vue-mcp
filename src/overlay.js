@@ -26,7 +26,12 @@ function createRPCClient(
       on: fn => ws.onmessage = (event) => fn(event.data),
       post: data => ws.send(data),
       // these are required when using WebSocket
-      serialize: v => JSON.stringify(v),
+      serialize: v => {
+        if (v.e instanceof Error) {
+          v.e = v.e.message;
+        }
+        return JSON.stringify(v);
+      },
       deserialize: v => JSON.parse(v),
     },
   )
@@ -61,11 +66,12 @@ setTimeout(() => {
   const ws = new WebSocket(`${proto}://${host}${base}`);
 
   let highlightComponentTimeout = null
-  const rpc = createRPCClient(
+
+  createRPCClient(
     ws,
     {
       // appRecord
-      async getAppRecordStatus({ event }) {
+      getAppRecordStatus() {
         const mapRecord = record => {
           return {
             id: record.id,
@@ -78,9 +84,9 @@ setTimeout(() => {
           activeAppRecord: mapRecord(devtools.ctx.state.activeAppRecord),
           activeAppRecordId: devtools.ctx.state.activeAppRecordId,
         };
-        rpc.onAppRecordStatusUpdate(event, JSON.stringify(appStatus));
+        return JSON.stringify(appStatus);
       },
-      async toggleApp({ id }) {
+      toggleApp({ id }) {
         devtools.ctx.api.toggleApp(id)
       },
       // get component tree
@@ -89,7 +95,15 @@ setTimeout(() => {
           inspectorId: COMPONENTS_INSPECTOR_ID,
           filter: '',
         })
-        rpc.onInspectorTreeUpdated(query.event, stringify(inspectorTree[0]))
+        if (query.componentName) {
+          const flattenedChildren = flattenChildren(inspectorTree[0])
+          const targetNode = flattenedChildren.find(child => child.name === query.componentName)
+          if (!targetNode) {
+            throw new Error(`Unable to find Component: "${query.componentName}"`)
+          }
+          return stringify(targetNode)
+        }
+        return stringify(inspectorTree[0])
       },
       // get component state
       async getInspectorState(query) {
@@ -99,11 +113,14 @@ setTimeout(() => {
         })
         const flattenedChildren = flattenChildren(inspectorTree[0])
         const targetNode = flattenedChildren.find(child => child.name === query.componentName)
+        if (!targetNode) {
+          throw new Error(`Unable to find Component: "${query.componentName}"`)
+        }
         const inspectorState = await devtools.api.getInspectorState({
           inspectorId: COMPONENTS_INSPECTOR_ID,
           nodeId: targetNode.id,
         })
-        rpc.onInspectorStateUpdated(query.event, stringify(inspectorState))
+        return stringify(inspectorState)
       },
 
       // edit component state
@@ -114,6 +131,9 @@ setTimeout(() => {
         })
         const flattenedChildren = flattenChildren(inspectorTree[0])
         const targetNode = flattenedChildren.find(child => child.name === query.componentName)
+        if (!targetNode) {
+          throw new Error(`Unable to find Component: "${query.componentName}"`)
+        }
         const payload = {
           app: '',
           inspectorId: COMPONENTS_INSPECTOR_ID,
@@ -139,17 +159,20 @@ setTimeout(() => {
         })
         const flattenedChildren = flattenChildren(inspectorTree[0])
         const targetNode = flattenedChildren.find(child => child.name === query.componentName)
+        if (!targetNode) {
+          throw new Error(`Unable to find Component: "${query.componentName}"`)
+        }
         await devtools.ctx.hooks.callHook('componentHighlight', { uid: targetNode.id })
         highlightComponentTimeout = setTimeout(() => {
           devtools.ctx.hooks.callHook('componentUnhighlight')
         }, 5000)
       },
       // get router info
-      async getRouterInfo(query) {
-        rpc.onRouterInfoUpdated(query.event, JSON.stringify(devtoolsRouterInfo, null, 2))
+      getRouterInfo() {
+        return JSON.stringify(devtoolsRouterInfo)
       },
       // get pinia tree
-      async getPiniaTree(query) {
+      async getPiniaTree() {
         const highPerfModeEnabled = devtoolsState.highPerfModeEnabled
         if (highPerfModeEnabled) {
           toggleHighPerfMode(false)
@@ -161,7 +184,7 @@ setTimeout(() => {
         if (highPerfModeEnabled) {
           toggleHighPerfMode(true)
         }
-        rpc.onPiniaTreeUpdated(query.event, stringify(inspectorTree))
+        return stringify(inspectorTree)
       },
       // get pinia state
       async getPiniaState(query) {
@@ -175,14 +198,15 @@ setTimeout(() => {
         }
         const inspector = getInspector(payload.inspectorId)
 
-        if (inspector)
+        if (inspector) {
           inspector.selectedNodeId = payload.nodeId
+        }
 
         const res = await devtools.ctx.api.getInspectorState(payload)
         if (highPerfModeEnabled) {
           toggleHighPerfMode(true)
         }
-        rpc.onPiniaInfoUpdated(query.event, stringify(res))
+        return stringify(res)
       },
     },
     {
