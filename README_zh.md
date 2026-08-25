@@ -101,9 +101,10 @@ MCP 服务（基于 Streamable HTTP 传输）将在 `http://localhost:[port]/__m
 ```json
 {
   "mcpServers": {
-    "vue-mcp": {
+    "vue-devtools": {
       "type": "streamable-http",
       "url": "http://localhost:<YourPort>/__mcp/mcp",
+      "description": "Vue DevTools MCP - Rsbuild/Rspack MCP plugin based on Vue DevTools",
       "disabled": false
     }
   }

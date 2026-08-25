@@ -104,9 +104,10 @@ Add that URL to your client's MCP configuration (Cursor, Claude Desktop, VS Code
 ```json
 {
   "mcpServers": {
-    "vue-mcp": {
+    "vue-devtools": {
       "type": "streamable-http",
       "url": "http://localhost:<YourPort>/__mcp/mcp",
+      "description": "Vue DevTools MCP - Rsbuild/Rspack MCP plugin based on Vue DevTools",
       "disabled": false
     }
   }
